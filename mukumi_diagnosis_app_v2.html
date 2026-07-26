@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>むくみタイプ診断｜限界むくみちゃん</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --pink-deep: #E8547A;
+    --pink-mid: #F2789A;
+    --pink-light: #FDE8EF;
+    --pink-pale: #FFF5F8;
+    --white: #FFFFFF;
+    --gray-text: #4A4A4A;
+    --gray-light: #F8F8F8;
+  }
+
+  body {
+    font-family: 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+    background: var(--pink-pale);
+    color: var(--gray-text);
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(145deg, var(--pink-deep), var(--pink-mid));
+    color: white;
+    text-align: center;
+    padding: 40px 24px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+  }
+
+  .hero-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    opacity: 0.85;
+    margin-bottom: 12px;
+  }
+
+  .hero h1 {
+    font-size: 24px;
+    font-weight: 900;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    background: rgba(255,255,255,0.25);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .hero-sub {
+    font-size: 13px;
+    opacity: 0.9;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* INTRO */
+  .intro {
+    background: white;
+    padding: 24px;
+    text-align: center;
+    border-bottom: 1px solid #FFE0EA;
+  }
+
+  .intro-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--pink-deep);
+    margin-bottom: 8px;
+  }
+
+  .intro-text {
+    font-size: 13px;
+    color: #666;
+  }
+
+  /* FORM */
+  .diagnosis-section {
+    padding: 28px 16px 0;
+  }
+
+  .section-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--pink-deep);
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  .section-sub {
+    font-size: 12px;
+    color: #999;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  /* 症状リスト（タイプ分けなし） */
+  .symptom-list {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(232,84,122,0.08);
+    margin-bottom: 24px;
+  }
+
+  .check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 20px;
+    border-bottom: 1px dashed #FFE8EF;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .check-item:last-child {
+    border-bottom: none;
+  }
+
+  .check-item:active {
+    background: var(--pink-pale);
+  }
+
+  .check-item input[type="checkbox"] {
+    display: none;
+  }
+
+  .custom-checkbox {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #DDD;
+    border-radius: 6px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    background: white;
+  }
+
+  .check-item input[type="checkbox"]:checked + .custom-checkbox {
+    background: var(--pink-deep);
+    border-color: var(--pink-deep);
+  }
+
+  .custom-checkbox::after {
+    content: '✓';
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .check-item input[type="checkbox"]:checked + .custom-checkbox::after {
+    opacity: 1;
+  }
+
+  .check-label {
+    font-size: 14px;
+    color: #444;
+    flex: 1;
+    line-height: 1.6;
+  }
+
+  /* チェック数 */
+  .checked-count {
+    text-align: center;
+    font-size: 13px;
+    color: var(--pink-deep);
+    font-weight: 700;
+    margin-bottom: 16px;
+    height: 20px;
+  }
+
+  /* BUTTON */
+  .btn-wrap {
+    padding: 0 16px 32px;
+    text-align: center;
+  }
+
+  .btn-diagnose {
+    background: linear-gradient(135deg, var(--pink-deep), var(--pink-mid));
+    color: white;
+    border: none;
+    width: 100%;
+    padding: 18px;
+    border-radius: 100px;
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(232,84,122,0.3);
+    transition: transform 0.2s;
+  }
+
+  .btn-diagnose:active {
+    transform: scale(0.98);
+  }
+
+  .btn-note {
+    font-size: 11px;
+    color: #aaa;
+    margin-top: 10px;
+  }
+
+  /* RESULT */
+  .result-section {
+    display: none;
+    padding: 0 16px 40px;
+  }
+
+  .result-section.show {
+    display: block;
+    animation: fadeIn 0.4s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* 判定ヒーロー */
+  .result-hero {
+    border-radius: 20px;
+    padding: 32px 24px;
+    text-align: center;
+    margin-bottom: 20px;
+    color: white;
+  }
+
+  .result-hero.hormone { background: linear-gradient(135deg, #E8547A, #F2789A); }
+  .result-hero.cold { background: linear-gradient(135deg, #4A90D9, #72B3F0); }
+  .result-hero.lymph { background: linear-gradient(135deg, #27AE60, #52C478); }
+  .result-hero.protein { background: linear-gradient(135deg, #F39C12, #F5B942); }
+
+  .result-label {
+    font-size: 12px;
+    opacity: 0.85;
+    letter-spacing: 0.1em;
+    margin-bottom: 10px;
+  }
+
+  .result-icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+  }
+
+  .result-type {
+    font-size: 26px;
+    font-weight: 900;
+    margin-bottom: 10px;
+  }
+
+  .result-desc {
+    font-size: 13px;
+    opacity: 0.92;
+    line-height: 1.7;
+  }
+
+  /* スコアバー */
+  .result-scores {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+
+  .score-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--pink-deep);
+    margin-bottom: 14px;
+  }
+
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .score-label {
+    font-size: 12px;
+    width: 90px;
+    flex-shrink: 0;
+  }
+
+  .score-bar-wrap {
+    flex: 1;
+    background: #F5F5F5;
+    border-radius: 100px;
+    height: 10px;
+    overflow: hidden;
+  }
+
+  .score-bar {
+    height: 100%;
+    border-radius: 100px;
+    width: 0%;
+    transition: width 0.8s ease;
+  }
+
+  .score-bar.hormone { background: linear-gradient(90deg, #E8547A, #F2789A); }
+  .score-bar.cold { background: linear-gradient(90deg, #4A90D9, #72B3F0); }
+  .score-bar.lymph { background: linear-gradient(90deg, #27AE60, #52C478); }
+  .score-bar.protein { background: linear-gradient(90deg, #F39C12, #F5B942); }
+
+  .score-num {
+    font-size: 12px;
+    font-weight: 700;
+    width: 30px;
+    text-align: right;
+  }
+
+  /* ケアシート */
+  .care-sheet {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+  }
+
+  .care-sheet-header {
+    padding: 16px 20px;
+    color: white;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .care-sheet-header.hormone { background: linear-gradient(135deg, #E8547A, #F2789A); }
+  .care-sheet-header.cold { background: linear-gradient(135deg, #4A90D9, #72B3F0); }
+  .care-sheet-header.lymph { background: linear-gradient(135deg, #27AE60, #52C478); }
+  .care-sheet-header.protein { background: linear-gradient(135deg, #F39C12, #F5B942); }
+
+  .care-sheet-body {
+    padding: 16px 20px;
+  }
+
+  .cause-box {
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    color: #555;
+    border-left: 3px solid;
+    line-height: 1.7;
+  }
+
+  .cause-box.hormone { border-color: #E8547A; background: #FFF0F4; }
+  .cause-box.cold { border-color: #4A90D9; background: #EEF6FF; }
+  .cause-box.lymph { border-color: #27AE60; background: #EEF9EE; }
+  .cause-box.protein { border-color: #F39C12; background: #FFF8EE; }
+
+  .care-list-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+
+  .care-list-title.hormone { color: #E8547A; }
+  .care-list-title.cold { color: #4A90D9; }
+  .care-list-title.lymph { color: #27AE60; }
+  .care-list-title.protein { color: #F39C12; }
+
+  .care-list {
+    list-style: none;
+  }
+
+  .care-list li {
+    font-size: 13px;
+    padding: 10px 12px 10px 36px;
+    position: relative;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    color: #444;
+    line-height: 1.6;
+  }
+
+  .care-list li.hormone { background: #FFF0F4; }
+  .care-list li.cold { background: #EEF6FF; }
+  .care-list li.lymph { background: #EEF9EE; }
+  .care-list li.protein { background: #FFF8EE; }
+
+  .care-list li::before {
+    content: '🌿';
+    position: absolute;
+    left: 10px;
+    top: 10px;
+  }
+
+  /* リセット */
+  .btn-reset {
+    background: white;
+    color: var(--pink-deep);
+    border: 2px solid var(--pink-deep);
+    width: 100%;
+    padding: 14px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+  }
+
+  .btn-reset:active {
+    background: var(--pink-pale);
+  }
+
+  /* FOOTER */
+  .footer {
+    background: white;
+    padding: 20px 24px;
+    text-align: center;
+    font-size: 11px;
+    color: #aaa;
+    border-top: 1px solid var(--pink-light);
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <p class="hero-eyebrow">限界むくみちゃん｜無料タイプ診断</p>
+  <h1>あなたのむくみ、<br><em>タイプが違う</em>かもしれない。</h1>
+  <p class="hero-sub">当てはまる症状にチェックを入れてね🌿<br>診断するとタイプとケア方法がわかるよ。</p>
+</div>
+
+<!-- INTRO -->
+<div class="intro">
+  <p class="intro-title">使い方</p>
+  <p class="intro-text">当てはまる症状すべてにチェック→<br>「診断する」ボタンを押すと結果が出るよ</p>
+</div>
+
+<!-- FORM -->
+<div class="diagnosis-section" id="formSection">
+  <p class="section-title">症状チェックリスト</p>
+  <p class="section-sub">当てはまるものすべてにチェックしてね</p>
+
+  <div class="symptom-list">
+
+    <!-- 症状（タイプを隠して並べる） -->
+    <label class="check-item">
+      <input type="checkbox" data-type="hormone" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">生理前に2〜3kg増えて体が重だるい</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="cold" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">夕方になると脚が重くて靴がきつくなる</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="lymph" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">朝起きると顔がパンパンになっている</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="protein" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">朝食を抜くことが多い・小食気味</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="hormone" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">35歳以降むくみがひどくなった</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="cold" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">靴下の跡がくっきり残る</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="lymph" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">鎖骨や脇の下を押すと痛い</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="protein" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">すねを押すとへこみが5秒以上残る</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="hormone" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">冷えと疲れが同時にひどくなった</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="cold" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">足首を触ると年中冷たい</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="lymph" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">デスクワークで腕がだるくなる</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="protein" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">ダイエット中・食事制限をしている</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="hormone" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">気分の波が激しくなってきた</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="cold" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">朝は普通なのに夕方だけパンパンになる</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="lymph" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">マッサージすると一時的に楽になる</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="protein" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">全身がなんとなく重だるい</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="hormone" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">生理周期が乱れてきた</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="cold" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">デスクワーク・立ち仕事が多い</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="lymph" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">顔・腕・デコルテがむくみやすい</span>
+    </label>
+    <label class="check-item">
+      <input type="checkbox" data-type="protein" onchange="updateCount()">
+      <span class="custom-checkbox"></span>
+      <span class="check-label">何をやっても取れない慢性むくみがある</span>
+    </label>
+
+  </div>
+
+  <p class="checked-count" id="checkedCount"></p>
+
+</div>
+
+<!-- BUTTON -->
+<div class="btn-wrap" id="btnWrap">
+  <button class="btn-diagnose" onclick="diagnose()">✨ 診断する</button>
+  <p class="btn-note">全部当てはまらなくてもOK。当てはまるものだけでね。</p>
+</div>
+
+<!-- RESULT -->
+<div class="result-section" id="resultSection">
+
+  <div class="result-hero" id="resultHero">
+    <p class="result-label">あなたのむくみタイプは</p>
+    <p class="result-icon" id="resultIcon"></p>
+    <p class="result-type" id="resultType"></p>
+    <p class="result-desc" id="resultDesc"></p>
+  </div>
+
+  <div class="result-scores">
+    <p class="score-title">📊 タイプ別スコア</p>
+    <div class="score-row">
+      <span class="score-label">🌙 ホルモン型</span>
+      <div class="score-bar-wrap"><div class="score-bar hormone" id="bar-hormone"></div></div>
+      <span class="score-num" id="num-hormone">0</span>
+    </div>
+    <div class="score-row">
+      <span class="score-label">🧊 冷え型</span>
+      <div class="score-bar-wrap"><div class="score-bar cold" id="bar-cold"></div></div>
+      <span class="score-num" id="num-cold">0</span>
+    </div>
+    <div class="score-row">
+      <span class="score-label">💚 リンパ型</span>
+      <div class="score-bar-wrap"><div class="score-bar lymph" id="bar-lymph"></div></div>
+      <span class="score-num" id="num-lymph">0</span>
+    </div>
+    <div class="score-row">
+      <span class="score-label">🥚 タンパク型</span>
+      <div class="score-bar-wrap"><div class="score-bar protein" id="bar-protein"></div></div>
+      <span class="score-num" id="num-protein">0</span>
+    </div>
+  </div>
+
+  <div class="care-sheet">
+    <div class="care-sheet-header" id="careHeader"></div>
+    <div class="care-sheet-body">
+      <div class="cause-box" id="causeBox"></div>
+      <p class="care-list-title" id="careListTitle">✦ 今日からできるケア</p>
+      <ul class="care-list" id="careList"></ul>
+    </div>
+  </div>
+
+  <button class="btn-reset" onclick="reset()">🔄 もう一度診断する</button>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <p>限界むくみちゃん｜体のトリセツ</p>
+  <p style="margin-top:6px;">※本コンテンツは一般的な知識の共有です。<br>気になる症状は必ずお医者さんに相談してね。</p>
+</div>
+
+<script>
+  const typeData = {
+    hormone: {
+      name: 'ホルモン型',
+      icon: '🌙',
+      colorClass: 'hormone',
+      desc: 'エストロゲンの変化がむくみの根本原因。外からのケアより、内側から血管と血流を整えることが先決。',
+      cause: 'エストロゲンが減り始めると血管が硬くなり、水分が血管の外に漏れ出す。マッサージや着圧だけでは根本に届かない。',
+      cares: [
+        '朝起きたら白湯＋天然塩ひとつまみ＋レモン汁小さじ1',
+        '冷凍ブルーベリーを毎朝50g（冷凍のまま・無糖ヨーグルトと）',
+        '納豆を毎朝1パック（大豆イソフラボンがホルモンの代役）',
+        'さば缶を週2回・水煮で汁ごと食べる（オメガ3で血管を守る）',
+        '寝る1時間前にスマホを置く（自律神経を整える）',
+      ],
+    },
+    cold: {
+      name: '冷え型',
+      icon: '🧊',
+      colorClass: 'cold',
+      desc: 'ふくらはぎのポンプ機能が止まって血流が滞っている状態。温めて動かすことが最優先。',
+      cause: '体が冷えると血管が収縮し、ふくらはぎのポンプ機能が止まる。水分が脚に溜まり続ける状態。',
+      cares: [
+        'お風呂で温冷シャワー（42度30秒→冷水10秒×3セット）',
+        'かかとの上げ下げを1日100回（座ったままでOK）',
+        '冷たい飲み物をルイボスティーか麦茶に変える',
+        'お風呂は38〜40度で10分浸かる（42度以上はNG）',
+        '足首・お腹・首の3点を冷やさない習慣をつける',
+      ],
+    },
+    lymph: {
+      name: 'リンパ型',
+      icon: '💚',
+      colorClass: 'lymph',
+      desc: 'リンパの出口が詰まって老廃物が回収されていない状態。出口を開けることが最優先。',
+      cause: 'リンパの出口（鎖骨・脇の下）が詰まって老廃物が回収されない。小顔ローラーより先に出口を開けることが必要。',
+      cares: [
+        '鎖骨の下を毎晩10秒ぐりぐり押す（痛気持ちいい強さで）',
+        '脇の下を毎晩30秒ほぐす（腋窩リンパ節のハブを開ける）',
+        '深呼吸を1日3回（横隔膜が動くとリンパが全身に流れる）',
+        '舌を口の中で10回ぐるぐる回す（顎下のリンパを流す）',
+        '耳を上下左右に10秒引っ張る（顔・首のリンパが流れる）',
+      ],
+    },
+    protein: {
+      name: 'タンパク質不足型',
+      icon: '🥚',
+      colorClass: 'protein',
+      desc: '食事から根本を変えることが最優先。アルブミンを増やすと体が変わり始める。',
+      cause: 'アルブミン（血液中のタンパク質）が不足すると水分を血管に戻せなくなる。ダイエット・小食・朝食抜きがむくみの原因になっている。',
+      cares: [
+        '朝食にゆで卵2個を食べる（タンパク質の補給を朝から）',
+        '納豆＋無糖ヨーグルトをセットで毎日摂る',
+        '豆腐半丁を毎日プラスする（植物性タンパク質）',
+        '朝食は絶対に抜かない（アルブミンが作られなくなる）',
+        'さば缶・ツナ缶を常備してタンパク質を手軽に補う',
+      ],
+    },
+  };
+
+  function updateCount() {
+    const total = document.querySelectorAll('input[type="checkbox"]:checked').length;
+    const el = document.getElementById('checkedCount');
+    el.textContent = total > 0 ? `${total}個チェックされています` : '';
+  }
+
+  function diagnose() {
+    const scores = { hormone: 0, cold: 0, lymph: 0, protein: 0 };
+    document.querySelectorAll('input[type="checkbox"]:checked').forEach(cb => {
+      scores[cb.dataset.type]++;
+    });
+
+    const total = Object.values(scores).reduce((a, b) => a + b, 0);
+    if (total === 0) {
+      alert('当てはまる症状にチェックを入れてね🌿');
+      return;
+    }
+
+    const topType = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
+    const data = typeData[topType];
+
+    // スコアバー
+    const max = Math.max(...Object.values(scores), 1);
+    ['hormone', 'cold', 'lymph', 'protein'].forEach(type => {
+      const pct = Math.round((scores[type] / max) * 100);
+      setTimeout(() => {
+        document.getElementById(`bar-${type}`).style.width = pct + '%';
+      }, 300);
+      document.getElementById(`num-${type}`).textContent = scores[type];
+    });
+
+    // 結果ヒーロー
+    const hero = document.getElementById('resultHero');
+    hero.className = `result-hero ${data.colorClass}`;
+    document.getElementById('resultIcon').textContent = data.icon;
+    document.getElementById('resultType').textContent = data.name;
+    document.getElementById('resultDesc').textContent = data.desc;
+
+    // ケアシート
+    const header = document.getElementById('careHeader');
+    header.className = `care-sheet-header ${data.colorClass}`;
+    header.textContent = `${data.icon} ${data.name}のケアシート`;
+
+    const causeBox = document.getElementById('causeBox');
+    causeBox.className = `cause-box ${data.colorClass}`;
+    causeBox.textContent = data.cause;
+
+    const careListTitle = document.getElementById('careListTitle');
+    careListTitle.className = `care-list-title ${data.colorClass}`;
+
+    const careList = document.getElementById('careList');
+    careList.innerHTML = data.cares.map(c =>
+      `<li class="${data.colorClass}">${c}</li>`
+    ).join('');
+
+    // 表示切替
+    document.getElementById('formSection').style.display = 'none';
+    document.getElementById('btnWrap').style.display = 'none';
+    const result = document.getElementById('resultSection');
+    result.classList.add('show');
+
+    setTimeout(() => {
+      result.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  }
+
+  function reset() {
+    document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+    updateCount();
+    document.getElementById('formSection').style.display = 'block';
+    document.getElementById('btnWrap').style.display = 'block';
+    document.getElementById('resultSection').classList.remove('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+</body>
+</html>
